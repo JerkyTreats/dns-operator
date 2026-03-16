@@ -1,0 +1,6 @@
+[watch]
+auto_generate_frames = true
+
+[watch.generation]
+max_concurrent_per_agent = 3
+batch_size = 50
