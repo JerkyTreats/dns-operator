@@ -1,0 +1,11 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dns-operator-controller-manager
+  namespace: dns-operator-system
+spec:
+  template:
+    spec:
+      containers:
+        - name: manager
+          image: ghcr.io/jerkytreats/dns-operator:latest

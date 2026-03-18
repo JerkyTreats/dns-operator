@@ -1,0 +1,19 @@
+apiVersion: tailscale.jerkytreats.dev/v1alpha1
+kind: TailnetDNSConfig
+metadata:
+  labels:
+    app.kubernetes.io/name: dns-operator
+    app.kubernetes.io/managed-by: kustomize
+  name: internal-zone
+  namespace: dns-operator-system
+spec:
+  zone: internal.example.test
+  tailnet: example.ts.net
+  nameserver:
+    address: 198.51.100.53
+  auth:
+    secretRef:
+      name: tailscale-admin-credentials
+      key: api-key
+  behavior:
+    mode: bootstrapAndRepair

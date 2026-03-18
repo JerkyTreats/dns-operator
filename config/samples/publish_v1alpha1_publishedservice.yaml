@@ -1,0 +1,20 @@
+apiVersion: publish.jerkytreats.dev/v1alpha1
+kind: PublishedService
+metadata:
+  labels:
+    app.kubernetes.io/name: dns-operator
+    app.kubernetes.io/managed-by: kustomize
+    publish.jerkytreats.dev/certificate-bundle: internal-shared
+  name: app
+  namespace: dns-operator-system
+spec:
+  hostname: app.internal.example.test
+  publishMode: httpsProxy
+  backend:
+    address: 192.0.2.10
+    port: 80
+    protocol: http
+  tls:
+    mode: sharedSAN
+  auth:
+    mode: none

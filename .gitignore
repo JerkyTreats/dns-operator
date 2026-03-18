@@ -1,3 +1,9 @@
 dns-export.zip
 extracted-dns-export/
+.cache/
+.gopath/
+.tmp/
+bin/
+dist/
+cover.out
 

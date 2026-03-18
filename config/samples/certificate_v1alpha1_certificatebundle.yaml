@@ -1,0 +1,25 @@
+apiVersion: certificate.jerkytreats.dev/v1alpha1
+kind: CertificateBundle
+metadata:
+  labels:
+    app.kubernetes.io/name: dns-operator
+    app.kubernetes.io/managed-by: kustomize
+  name: internal-shared
+  namespace: dns-operator-system
+spec:
+  mode: sharedSAN
+  publishedServiceSelector:
+    matchLabels:
+      publish.jerkytreats.dev/certificate-bundle: internal-shared
+  issuer:
+    provider: letsencrypt-staging
+    email: admin@example.com
+  challenge:
+    type: dns01
+    cloudflare:
+      apiTokenSecretRef:
+        name: cloudflare-credentials
+        key: api-token
+  secretTemplate:
+    name: internal-example-test-shared-tls
+  renewBefore: 720h

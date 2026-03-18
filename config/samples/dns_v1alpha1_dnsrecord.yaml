@@ -1,0 +1,14 @@
+apiVersion: dns.jerkytreats.dev/v1alpha1
+kind: DNSRecord
+metadata:
+  labels:
+    app.kubernetes.io/name: dns-operator
+    app.kubernetes.io/managed-by: kustomize
+  name: ns-record
+  namespace: dns-operator-system
+spec:
+  hostname: ns1.internal.example.test
+  type: A
+  ttl: 300
+  values:
+    - 198.51.100.53
