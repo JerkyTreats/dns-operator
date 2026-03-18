@@ -1,8 +1,13 @@
 # dns-operator
-// TODO(user): Add simple overview of use/purpose
 
-## Description
-// TODO(user): An in-depth paragraph about your project and overview of use
+`dns-operator` is a Kubernetes operator for internal publishing under `internal.example.test`.
+
+It manages:
+
+- authoritative DNS through `DNSRecord`
+- browser-facing internal publishing through `PublishedService`
+- shared SAN certificate state through `CertificateBundle`
+- Tailscale split-DNS bootstrap and repair through `TailnetDNSConfig`
 
 ## Getting Started
 
@@ -46,6 +51,25 @@ kubectl apply -k config/samples/
 ```
 
 >**NOTE**: Ensure that the samples has default values to test it out.
+
+### Import Existing Reference Data
+
+The reference migration path is available through the importer CLI:
+
+```sh
+go run ./cmd/import-reference \
+  --namespace dns-operator-system \
+  --config /path/to/export/config.yaml \
+  --zone-file /path/to/export/internal.example.test.zone \
+  --proxy-rules /path/to/export/proxy_rules.json \
+  --certificate-domains /path/to/export/certificate_domains.json \
+  --caddyfile /path/to/export/Caddyfile \
+  --nameserver-address 100.70.110.111 \
+  --output dist/imported-resources.yaml \
+  --report dist/import-report.json
+```
+
+See `docs/migration/import-reference.md` for details on supported inputs, emitted resources, and safety notes.
 
 ### To Uninstall
 **Delete the instances (CRs) from the cluster:**
@@ -111,7 +135,6 @@ previously added to 'dist/chart/values.yaml' or 'dist/chart/manager/manager.yaml
 is manually re-applied afterwards.
 
 ## Contributing
-// TODO(user): Add detailed information on how you would like others to contribute to this project
 
 **NOTE:** Run `make help` for more information on all potential `make` targets
 

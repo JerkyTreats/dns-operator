@@ -1,0 +1,81 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Image tag to publish"
+        required: true
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: jerkytreats/dns-operator
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      - name: Run tests
+        run: make test
+
+      - name: Resolve release tag
+        id: release_tag
+        run: |
+          if [ -n "${{ github.event.inputs.tag }}" ]; then
+            echo "value=${{ github.event.inputs.tag }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "value=${GITHUB_REF_NAME}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract image metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=raw,value=${{ steps.release_tag.outputs.value }}
+            type=raw,value=latest,enable=${{ startsWith(steps.release_tag.outputs.value, 'v') }}
+
+      - name: Build and push image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          platforms: linux/amd64,linux/arm64
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build installer bundle
+        run: make build-installer IMG=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.release_tag.outputs.value }}
+
+      - name: Upload installer bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: dns-operator-install-${{ steps.release_tag.outputs.value }}
+          path: dist/install.yaml

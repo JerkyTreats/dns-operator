@@ -1,0 +1,45 @@
+name: Update Overlay Image Tag
+
+on:
+  workflow_dispatch:
+    inputs:
+      image_tag:
+        description: "Published image tag to pin in deploy/argocd/overlays/cluster-name"
+        required: true
+
+jobs:
+  update-overlay:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Update overlay image tag patch
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          path = Path("deploy/argocd/overlays/cluster-name/image-tag-patch.yaml")
+          tag = "${{ github.event.inputs.image_tag }}"
+          text = path.read_text()
+          lines = text.splitlines()
+          for idx, line in enumerate(lines):
+              if "image:" in line:
+                  lines[idx] = f"          image: ghcr.io/jerkytreats/dns-operator:{tag}"
+                  break
+          else:
+              raise SystemExit("image line not found in overlay patch")
+          path.write_text("\n".join(lines) + "\n")
+          PY
+
+      - name: Create pull request
+        uses: peter-evans/create-pull-request@v7
+        with:
+          branch: automation/update-overlay-image-${{ github.event.inputs.image_tag }}
+          commit-message: "build(release): pin cluster overlay to ${{ github.event.inputs.image_tag }}"
+          title: "build(release): pin cluster overlay to ${{ github.event.inputs.image_tag }}"
+          body: |
+            Update the cluster overlay image pin after publishing `${{ github.event.inputs.image_tag }}`.
