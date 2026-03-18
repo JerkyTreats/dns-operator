@@ -31,9 +31,8 @@ type CertificateBundleReconciler struct {
 	Scheme *runtime.Scheme
 }
 
-// +kubebuilder:rbac:groups=certificate.jerkytreats.dev,resources=certificatebundles,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=certificate.jerkytreats.dev,resources=certificatebundles,verbs=get;list;watch
 // +kubebuilder:rbac:groups=certificate.jerkytreats.dev,resources=certificatebundles/status,verbs=get;update;patch
-// +kubebuilder:rbac:groups=certificate.jerkytreats.dev,resources=certificatebundles/finalizers,verbs=update
 // +kubebuilder:rbac:groups=publish.jerkytreats.dev,resources=publishedservices,verbs=get;list;watch
 // +kubebuilder:rbac:groups="",resources=secrets,verbs=get;list;watch;create;update;patch
 
@@ -57,9 +56,16 @@ func (r *CertificateBundleReconciler) Reconcile(ctx context.Context, req ctrl.Re
 		Conditions:         resetConditions(bundle.Status.Conditions),
 	}
 
-	secretNamespace := bundle.Spec.Challenge.Cloudflare.APITokenSecretRef.Namespace
-	if secretNamespace == "" {
-		secretNamespace = bundle.Namespace
+	secretNamespace, secretNamespaceErr := namespaceForSecretRef(bundle.Namespace, bundle.Spec.Challenge.Cloudflare.APITokenSecretRef.Namespace)
+	if secretNamespaceErr != nil {
+		setFalseCondition(&status.Conditions, common.ConditionCredentialsReady, "CrossNamespaceSecretRefRejected", secretNamespaceErr.Error(), bundle.Generation)
+		setFalseCondition(&status.Conditions, common.ConditionCertificateReady, "CredentialsUnavailable", secretNamespaceErr.Error(), bundle.Generation)
+		setFalseCondition(&status.Conditions, common.ConditionReady, "CredentialsUnavailable", secretNamespaceErr.Error(), bundle.Generation)
+		status.EffectiveDomains = nil
+		if err := r.patchStatus(ctx, &bundle, status); err != nil {
+			return ctrl.Result{}, err
+		}
+		return ctrl.Result{RequeueAfter: 5 * time.Minute}, nil
 	}
 
 	if _, err := r.readSecretValue(ctx, secretNamespace, bundle.Spec.Challenge.Cloudflare.APITokenSecretRef.Name, bundle.Spec.Challenge.Cloudflare.APITokenSecretRef.Key); err != nil {
@@ -160,6 +166,13 @@ func (r *CertificateBundleReconciler) readSecretValue(ctx context.Context, names
 		return "", fmt.Errorf("secret %s/%s missing key %q", namespace, name, key)
 	}
 	return string(value), nil
+}
+
+func namespaceForSecretRef(ownerNamespace, refNamespace string) (string, error) {
+	if refNamespace == "" || refNamespace == ownerNamespace {
+		return ownerNamespace, nil
+	}
+	return "", fmt.Errorf("secret references must remain in namespace %q", ownerNamespace)
 }
 
 func (r *CertificateBundleReconciler) reconcileTLSSecret(ctx context.Context, desired *corev1.Secret) error {

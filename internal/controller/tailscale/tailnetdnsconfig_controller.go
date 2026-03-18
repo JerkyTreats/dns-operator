@@ -28,9 +28,8 @@ type TailnetDNSConfigReconciler struct {
 	ClientFactory SplitDNSClientFactory
 }
 
-// +kubebuilder:rbac:groups=tailscale.jerkytreats.dev,resources=tailnetdnsconfigs,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=tailscale.jerkytreats.dev,resources=tailnetdnsconfigs,verbs=get;list;watch
 // +kubebuilder:rbac:groups=tailscale.jerkytreats.dev,resources=tailnetdnsconfigs/status,verbs=get;update;patch
-// +kubebuilder:rbac:groups=tailscale.jerkytreats.dev,resources=tailnetdnsconfigs/finalizers,verbs=update
 // +kubebuilder:rbac:groups="",resources=secrets,verbs=get;list;watch
 
 func (r *TailnetDNSConfigReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
@@ -44,9 +43,15 @@ func (r *TailnetDNSConfigReconciler) Reconcile(ctx context.Context, req ctrl.Req
 		return ctrl.Result{}, err
 	}
 
-	secretNamespace := config.Spec.Auth.SecretRef.Namespace
-	if secretNamespace == "" {
-		secretNamespace = config.Namespace
+	secretNamespace, secretNamespaceErr := namespaceForSecretRef(config.Namespace, config.Spec.Auth.SecretRef.Namespace)
+	if secretNamespaceErr != nil {
+		if err := r.updateStatus(ctx, &config, tailscalev1alpha1.TailnetDNSConfigStatus{
+			ObservedGeneration: config.Generation,
+			DriftDetected:      true,
+		}, secretNamespaceErr, nil); err != nil {
+			return ctrl.Result{}, err
+		}
+		return ctrl.Result{RequeueAfter: driftCheckInterval}, nil
 	}
 
 	apiToken, credErr := r.readSecretValue(ctx, secretNamespace, config.Spec.Auth.SecretRef.Name, config.Spec.Auth.SecretRef.Key)
@@ -117,6 +122,13 @@ func (r *TailnetDNSConfigReconciler) readSecretValue(ctx context.Context, namesp
 		return "", fmt.Errorf("secret %s/%s missing key %q", namespace, name, key)
 	}
 	return string(value), nil
+}
+
+func namespaceForSecretRef(ownerNamespace, refNamespace string) (string, error) {
+	if refNamespace == "" || refNamespace == ownerNamespace {
+		return ownerNamespace, nil
+	}
+	return "", fmt.Errorf("secret references must remain in namespace %q", ownerNamespace)
 }
 
 func (r *TailnetDNSConfigReconciler) updateStatus(

@@ -29,19 +29,9 @@ rules:
   resources:
   - certificatebundles
   verbs:
-  - create
-  - delete
   - get
   - list
-  - patch
-  - update
   - watch
-- apiGroups:
-  - certificate.jerkytreats.dev
-  resources:
-  - certificatebundles/finalizers
-  verbs:
-  - update
 - apiGroups:
   - certificate.jerkytreats.dev
   resources:
@@ -55,19 +45,9 @@ rules:
   resources:
   - dnsrecords
   verbs:
-  - create
-  - delete
   - get
   - list
-  - patch
-  - update
   - watch
-- apiGroups:
-  - dns.jerkytreats.dev
-  resources:
-  - dnsrecords/finalizers
-  verbs:
-  - update
 - apiGroups:
   - dns.jerkytreats.dev
   resources:
@@ -97,19 +77,9 @@ rules:
   resources:
   - tailnetdnsconfigs
   verbs:
-  - create
-  - delete
   - get
   - list
-  - patch
-  - update
   - watch
-- apiGroups:
-  - tailscale.jerkytreats.dev
-  resources:
-  - tailnetdnsconfigs/finalizers
-  verbs:
-  - update
 - apiGroups:
   - tailscale.jerkytreats.dev
   resources:

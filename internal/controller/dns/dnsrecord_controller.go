@@ -32,9 +32,8 @@ type DNSRecordReconciler struct {
 	Scheme *runtime.Scheme
 }
 
-// +kubebuilder:rbac:groups=dns.jerkytreats.dev,resources=dnsrecords,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=dns.jerkytreats.dev,resources=dnsrecords,verbs=get;list;watch
 // +kubebuilder:rbac:groups=dns.jerkytreats.dev,resources=dnsrecords/status,verbs=get;update;patch
-// +kubebuilder:rbac:groups=dns.jerkytreats.dev,resources=dnsrecords/finalizers,verbs=update
 // +kubebuilder:rbac:groups=publish.jerkytreats.dev,resources=publishedservices,verbs=get;list;watch
 // +kubebuilder:rbac:groups=publish.jerkytreats.dev,resources=publishedservices/status,verbs=get;update;patch
 // +kubebuilder:rbac:groups="",resources=configmaps,verbs=get;list;watch;create;update;patch

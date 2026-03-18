@@ -130,6 +130,50 @@ func TestCertificateBundleReconcileMissingCredentials(t *testing.T) {
 	}
 }
 
+func TestCertificateBundleReconcileRejectsCrossNamespaceSecretRef(t *testing.T) {
+	t.Parallel()
+
+	scheme := newCertificateScheme(t)
+	bundle := &certificatev1alpha1.CertificateBundle{
+		ObjectMeta: metav1.ObjectMeta{Name: "internal-shared", Namespace: "dns-operator-system", Generation: 1},
+		Spec: certificatev1alpha1.CertificateBundleSpec{
+			Mode: certificatev1alpha1.CertificateBundleModeSharedSAN,
+			Issuer: certificatev1alpha1.BundleIssuer{
+				Provider: certificatev1alpha1.CertificateIssuerLetsEncryptStaged,
+				Email:    "admin@example.com",
+			},
+			Challenge: certificatev1alpha1.BundleChallenge{
+				Type: certificatev1alpha1.CertificateChallengeDNS01,
+				Cloudflare: certificatev1alpha1.BundleCloudflare{
+					APITokenSecretRef: common.SecretKeyReference{Name: "cloudflare-credentials", Namespace: "shared-secrets", Key: "api-token"},
+				},
+			},
+			SecretTemplate: certificatev1alpha1.BundleSecretTemplate{Name: "internal-example-test-shared-tls"},
+		},
+	}
+
+	client := fake.NewClientBuilder().
+		WithScheme(scheme).
+		WithStatusSubresource(&certificatev1alpha1.CertificateBundle{}).
+		WithObjects(bundle).
+		Build()
+
+	reconciler := &CertificateBundleReconciler{Client: client, Scheme: scheme}
+	if _, err := reconciler.Reconcile(context.Background(), ctrl.Request{
+		NamespacedName: types.NamespacedName{Name: bundle.Name, Namespace: bundle.Namespace},
+	}); err != nil {
+		t.Fatalf("reconcile returned error: %v", err)
+	}
+
+	var updated certificatev1alpha1.CertificateBundle
+	if err := client.Get(context.Background(), types.NamespacedName{Name: bundle.Name, Namespace: bundle.Namespace}, &updated); err != nil {
+		t.Fatalf("get updated bundle: %v", err)
+	}
+	if updated.Status.State != "Pending" {
+		t.Fatalf("expected bundle to remain pending, got state %q", updated.Status.State)
+	}
+}
+
 func newCertificateScheme(t *testing.T) *runtime.Scheme {
 	t.Helper()
 

@@ -18,6 +18,14 @@ spec:
         app.kubernetes.io/name: dns-operator
         app.kubernetes.io/component: coredns
     spec:
+      serviceAccountName: dns-operator-coredns
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65532
+        runAsGroup: 65532
+        seccompProfile:
+          type: RuntimeDefault
       containers:
         - name: coredns
           image: rancher/mirrored-coredns-coredns:1.13.1
@@ -43,6 +51,21 @@ spec:
             httpGet:
               path: /health
               port: health
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+              add:
+                - NET_BIND_SERVICE
+          resources:
+            requests:
+              cpu: 10m
+              memory: 32Mi
+            limits:
+              cpu: 250m
+              memory: 128Mi
           volumeMounts:
             - name: coredns-corefile
               mountPath: /etc/coredns/Corefile
@@ -51,6 +74,8 @@ spec:
             - name: coredns-zone
               mountPath: /etc/coredns/zones
               readOnly: true
+            - name: coredns-tmp
+              mountPath: /tmp
       volumes:
         - name: coredns-corefile
           configMap:
@@ -63,3 +88,5 @@ spec:
               - configMap:
                   name: zone-internal-example-test
                   optional: true
+        - name: coredns-tmp
+          emptyDir: {}
