@@ -107,7 +107,8 @@ spec:
             - message: backend is required when publishMode is httpsProxy
               rule: self.publishMode != 'httpsProxy' || has(self.backend)
             - message: backend.address is required when publishMode is httpsProxy
-              rule: self.publishMode != 'httpsProxy' || self.backend.address != ''
+              rule: self.publishMode != 'httpsProxy' || !has(self.backend) || size(self.backend.address)
+                > 0
             - message: tls is required when publishMode is httpsProxy
               rule: self.publishMode != 'httpsProxy' || has(self.tls)
           status:

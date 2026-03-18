@@ -39,6 +39,7 @@ import (
 	dnsv1alpha1 "github.com/jerkytreats/dns-operator/api/dns/v1alpha1"
 	publishv1alpha1 "github.com/jerkytreats/dns-operator/api/publish/v1alpha1"
 	tailscalev1alpha1 "github.com/jerkytreats/dns-operator/api/tailscale/v1alpha1"
+	certificatecontroller "github.com/jerkytreats/dns-operator/internal/controller/certificate"
 	dnscontroller "github.com/jerkytreats/dns-operator/internal/controller/dns"
 	tailscalecontroller "github.com/jerkytreats/dns-operator/internal/controller/tailscale"
 	// +kubebuilder:scaffold:imports
@@ -190,6 +191,13 @@ func main() {
 		Scheme: mgr.GetScheme(),
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "DNSRecord")
+		os.Exit(1)
+	}
+	if err := (&certificatecontroller.CertificateBundleReconciler{
+		Client: mgr.GetClient(),
+		Scheme: mgr.GetScheme(),
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "CertificateBundle")
 		os.Exit(1)
 	}
 	if err := (&tailscalecontroller.TailnetDNSConfigReconciler{

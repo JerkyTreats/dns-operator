@@ -8,6 +8,7 @@ rules:
   - ""
   resources:
   - configmaps
+  - secrets
   verbs:
   - create
   - get
@@ -16,13 +17,31 @@ rules:
   - update
   - watch
 - apiGroups:
-  - ""
+  - certificate.jerkytreats.dev
   resources:
-  - secrets
+  - certificatebundles
   verbs:
+  - create
+  - delete
   - get
   - list
+  - patch
+  - update
   - watch
+- apiGroups:
+  - certificate.jerkytreats.dev
+  resources:
+  - certificatebundles/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - certificate.jerkytreats.dev
+  resources:
+  - certificatebundles/status
+  verbs:
+  - get
+  - patch
+  - update
 - apiGroups:
   - dns.jerkytreats.dev
   resources:

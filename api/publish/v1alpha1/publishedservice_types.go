@@ -60,7 +60,7 @@ type PublishAuth struct {
 }
 
 // +kubebuilder:validation:XValidation:rule="self.publishMode != 'httpsProxy' || has(self.backend)",message="backend is required when publishMode is httpsProxy"
-// +kubebuilder:validation:XValidation:rule="self.publishMode != 'httpsProxy' || self.backend.address != ''",message="backend.address is required when publishMode is httpsProxy"
+// +kubebuilder:validation:XValidation:rule="self.publishMode != 'httpsProxy' || !has(self.backend) || size(self.backend.address) > 0",message="backend.address is required when publishMode is httpsProxy"
 // +kubebuilder:validation:XValidation:rule="self.publishMode != 'httpsProxy' || has(self.tls)",message="tls is required when publishMode is httpsProxy"
 type PublishedServiceSpec struct {
 	// +kubebuilder:validation:MinLength=1
