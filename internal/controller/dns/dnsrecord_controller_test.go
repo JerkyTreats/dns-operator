@@ -49,11 +49,20 @@ func TestReconcileRendersZoneConfigMap(t *testing.T) {
 			TLS: &publishv1alpha1.PublishTLS{Mode: publishv1alpha1.TLSModeSharedSAN},
 		},
 	}
+	runtimeService := &corev1.Service{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "dns-operator-caddy",
+			Namespace: "dns-operator-system",
+		},
+		Spec: corev1.ServiceSpec{
+			ClusterIP: "192.0.2.200",
+		},
+	}
 
 	client := fake.NewClientBuilder().
 		WithScheme(scheme).
 		WithStatusSubresource(&dnsv1alpha1.DNSRecord{}, &publishv1alpha1.PublishedService{}).
-		WithObjects(record, service).
+		WithObjects(record, service, runtimeService).
 		Build()
 
 	reconciler := &DNSRecordReconciler{
@@ -82,7 +91,7 @@ func TestReconcileRendersZoneConfigMap(t *testing.T) {
 	if want := "app 300 IN A 192.0.2.10"; !strings.Contains(content, want) {
 		t.Fatalf("expected rendered content %q in zone:\n%s", want, content)
 	}
-	if want := "api.portal 300 IN A 192.0.2.11"; !strings.Contains(content, want) {
+	if want := "api.portal 300 IN A 192.0.2.200"; !strings.Contains(content, want) {
 		t.Fatalf("expected projected service content %q in zone:\n%s", want, content)
 	}
 
@@ -123,11 +132,20 @@ func TestReconcilePublishedServiceOnlyNamespaceSync(t *testing.T) {
 			TLS: &publishv1alpha1.PublishTLS{Mode: publishv1alpha1.TLSModeSharedSAN},
 		},
 	}
+	runtimeService := &corev1.Service{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "dns-operator-caddy",
+			Namespace: "dns-operator-system",
+		},
+		Spec: corev1.ServiceSpec{
+			ClusterIP: "192.0.2.200",
+		},
+	}
 
 	client := fake.NewClientBuilder().
 		WithScheme(scheme).
 		WithStatusSubresource(&publishv1alpha1.PublishedService{}).
-		WithObjects(service).
+		WithObjects(service, runtimeService).
 		Build()
 
 	reconciler := &DNSRecordReconciler{

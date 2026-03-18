@@ -1,0 +1,21 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: dns-operator-coredns-empty-zone
+  namespace: dns-operator-system
+  labels:
+    app.kubernetes.io/name: dns-operator
+    app.kubernetes.io/component: coredns
+data:
+  db.internal.example.test: |
+    $ORIGIN internal.example.test.
+    $TTL 300
+    @ IN SOA ns1.internal.example.test. hostmaster.internal.example.test. (
+      2026000000 ; serial
+      120 ; refresh
+      60 ; retry
+      604800 ; expire
+      300 ; minimum
+    )
+    @ IN NS ns1.internal.example.test.
+    ns1 IN A 127.0.0.1

@@ -1,0 +1,20 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: dns-operator-caddy
+  namespace: dns-operator-system
+  labels:
+    app.kubernetes.io/name: dns-operator
+    app.kubernetes.io/component: caddy
+spec:
+  type: LoadBalancer
+  selector:
+    app.kubernetes.io/name: dns-operator
+    app.kubernetes.io/component: caddy
+  ports:
+    - name: http
+      port: 80
+      targetPort: http
+    - name: https
+      port: 443
+      targetPort: https

@@ -80,6 +80,27 @@ func RecordForPublishedService(service publishv1alpha1.PublishedService) (Author
 	}, nil
 }
 
+func RecordForPublishedServiceTarget(service publishv1alpha1.PublishedService, target string) (AuthoritativeRecord, error) {
+	if err := validation.ValidateManagedHostname(service.Spec.Hostname); err != nil {
+		return AuthoritativeRecord{}, err
+	}
+	if target == "" {
+		return AuthoritativeRecord{}, fmt.Errorf("publish runtime target is required")
+	}
+
+	recordType, value, err := validation.InferRecordFromAddress(target)
+	if err != nil {
+		return AuthoritativeRecord{}, err
+	}
+
+	return AuthoritativeRecord{
+		Hostname: service.Spec.Hostname,
+		Type:     recordType,
+		TTL:      defaultTTL,
+		Values:   []string{value},
+	}, nil
+}
+
 func RenderZone(records []AuthoritativeRecord) RenderedZone {
 	aggregated := map[string]AuthoritativeRecord{}
 	keys := make([]string, 0, len(records))

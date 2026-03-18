@@ -1,0 +1,22 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: dns-operator-authoritative-dns
+  namespace: dns-operator-system
+  labels:
+    app.kubernetes.io/name: dns-operator
+    app.kubernetes.io/component: coredns
+spec:
+  type: LoadBalancer
+  selector:
+    app.kubernetes.io/name: dns-operator
+    app.kubernetes.io/component: coredns
+  ports:
+    - name: dns-tcp
+      port: 53
+      protocol: TCP
+      targetPort: dns-tcp
+    - name: dns-udp
+      port: 53
+      protocol: UDP
+      targetPort: dns-udp

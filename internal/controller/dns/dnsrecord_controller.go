@@ -8,6 +8,7 @@ import (
 	dnsv1alpha1 "github.com/jerkytreats/dns-operator/api/dns/v1alpha1"
 	publishv1alpha1 "github.com/jerkytreats/dns-operator/api/publish/v1alpha1"
 	dnsdomain "github.com/jerkytreats/dns-operator/internal/dns"
+	publishdomain "github.com/jerkytreats/dns-operator/internal/publish"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/meta"
@@ -37,6 +38,7 @@ type DNSRecordReconciler struct {
 // +kubebuilder:rbac:groups=publish.jerkytreats.dev,resources=publishedservices,verbs=get;list;watch
 // +kubebuilder:rbac:groups=publish.jerkytreats.dev,resources=publishedservices/status,verbs=get;update;patch
 // +kubebuilder:rbac:groups="",resources=configmaps,verbs=get;list;watch;create;update;patch
+// +kubebuilder:rbac:groups="",resources=services,verbs=get;list;watch
 
 func (r *DNSRecordReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	logger := log.FromContext(ctx).WithValues("namespace", req.Namespace, "name", req.Name)
@@ -57,6 +59,7 @@ func (r *DNSRecordReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 	projected := make([]dnsdomain.AuthoritativeRecord, 0, len(records.Items)+len(services.Items))
 	recordErrors := map[types.NamespacedName]error{}
 	serviceErrors := map[types.NamespacedName]error{}
+	publishRuntimeTarget, publishRuntimeTargetErr := r.resolvePublishRuntimeTarget(ctx, req.Namespace)
 
 	for i := range records.Items {
 		record := records.Items[i]
@@ -70,7 +73,7 @@ func (r *DNSRecordReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 
 	for i := range services.Items {
 		service := services.Items[i]
-		projectedRecord, err := dnsdomain.RecordForPublishedService(service)
+		projectedRecord, err := r.projectPublishedServiceRecord(service, publishRuntimeTarget, publishRuntimeTargetErr)
 		if err != nil {
 			serviceErrors[client.ObjectKeyFromObject(&service)] = err
 			continue
@@ -141,8 +144,56 @@ func (r *DNSRecordReconciler) SetupWithManager(mgr ctrl.Manager) error {
 			}),
 			builder.WithPredicates(publishedServiceChanged),
 		).
+		Watches(
+			&corev1.Service{},
+			handler.EnqueueRequestsFromMapFunc(func(_ context.Context, obj client.Object) []reconcile.Request {
+				if obj.GetName() != publishdomain.RuntimeServiceName {
+					return nil
+				}
+				return []reconcile.Request{{
+					NamespacedName: types.NamespacedName{
+						Namespace: obj.GetNamespace(),
+						Name:      dnsdomain.ZoneSyncRequestName,
+					},
+				}}
+			}),
+			builder.WithPredicates(publishedServiceChanged),
+		).
 		Named("dns-dnsrecord").
 		Complete(r)
+}
+
+func (r *DNSRecordReconciler) projectPublishedServiceRecord(
+	service publishv1alpha1.PublishedService,
+	publishRuntimeTarget string,
+	publishRuntimeTargetErr error,
+) (dnsdomain.AuthoritativeRecord, error) {
+	if service.Spec.PublishMode != publishv1alpha1.PublishModeHTTPSProxy {
+		return dnsdomain.RecordForPublishedService(service)
+	}
+	if publishRuntimeTargetErr != nil {
+		return dnsdomain.AuthoritativeRecord{}, publishRuntimeTargetErr
+	}
+	return dnsdomain.RecordForPublishedServiceTarget(service, publishRuntimeTarget)
+}
+
+func (r *DNSRecordReconciler) resolvePublishRuntimeTarget(ctx context.Context, namespace string) (string, error) {
+	var runtimeService corev1.Service
+	if err := r.Get(ctx, types.NamespacedName{Name: publishdomain.RuntimeServiceName, Namespace: namespace}, &runtimeService); err != nil {
+		return "", fmt.Errorf("get publish runtime service: %w", err)
+	}
+	for _, ingress := range runtimeService.Status.LoadBalancer.Ingress {
+		if ingress.IP != "" {
+			return ingress.IP, nil
+		}
+		if ingress.Hostname != "" {
+			return ingress.Hostname, nil
+		}
+	}
+	if runtimeService.Spec.ClusterIP != "" && runtimeService.Spec.ClusterIP != corev1.ClusterIPNone {
+		return runtimeService.Spec.ClusterIP, nil
+	}
+	return "", fmt.Errorf("publish runtime service does not have an address yet")
 }
 
 func (r *DNSRecordReconciler) reconcileZoneConfigMap(ctx context.Context, namespace string, rendered dnsdomain.RenderedZone) error {
@@ -257,20 +308,11 @@ func (r *DNSRecordReconciler) updatePublishedServiceStatus(
 	service.Status.Conditions = resetConditions(service.Status.Conditions)
 
 	if projectionErr != nil {
-		setFalseCondition(&service.Status.Conditions, common.ConditionInputValid, "ValidationFailed", projectionErr.Error(), service.Generation)
-		setFalseCondition(&service.Status.Conditions, common.ConditionAccepted, "Rejected", projectionErr.Error(), service.Generation)
 		setFalseCondition(&service.Status.Conditions, common.ConditionDNSReady, "ProjectionFailed", projectionErr.Error(), service.Generation)
-		setFalseCondition(&service.Status.Conditions, common.ConditionReady, "ProjectionFailed", projectionErr.Error(), service.Generation)
 	} else if configMapErr != nil {
-		setTrueCondition(&service.Status.Conditions, common.ConditionInputValid, "Validated", "service accepted for DNS projection", service.Generation)
-		setTrueCondition(&service.Status.Conditions, common.ConditionAccepted, "Accepted", "service accepted for DNS projection", service.Generation)
 		setFalseCondition(&service.Status.Conditions, common.ConditionDNSReady, "ConfigMapUpdateFailed", configMapErr.Error(), service.Generation)
-		setFalseCondition(&service.Status.Conditions, common.ConditionReady, "ConfigMapUpdateFailed", configMapErr.Error(), service.Generation)
 	} else {
-		setTrueCondition(&service.Status.Conditions, common.ConditionInputValid, "Validated", "service accepted for DNS projection", service.Generation)
-		setTrueCondition(&service.Status.Conditions, common.ConditionAccepted, "Accepted", "service accepted for DNS projection", service.Generation)
 		setTrueCondition(&service.Status.Conditions, common.ConditionDNSReady, "Rendered", "service hostname rendered into authoritative zone output", service.Generation)
-		setTrueCondition(&service.Status.Conditions, common.ConditionReady, "Rendered", "service hostname rendered into authoritative zone output", service.Generation)
 	}
 
 	if equalPublishedServiceStatus(base.Status, service.Status) {

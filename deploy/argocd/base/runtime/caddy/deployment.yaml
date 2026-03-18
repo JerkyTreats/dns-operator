@@ -1,0 +1,68 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dns-operator-caddy
+  namespace: dns-operator-system
+  labels:
+    app.kubernetes.io/name: dns-operator
+    app.kubernetes.io/component: caddy
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: dns-operator
+      app.kubernetes.io/component: caddy
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: dns-operator
+        app.kubernetes.io/component: caddy
+    spec:
+      containers:
+        - name: caddy
+          image: caddy:2
+          args:
+            - run
+            - --config
+            - /etc/caddy/Caddyfile
+            - --adapter
+            - caddyfile
+            - --watch
+          ports:
+            - name: http
+              containerPort: 80
+            - name: https
+              containerPort: 443
+            - name: health
+              containerPort: 2019
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: health
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: health
+          volumeMounts:
+            - name: caddy-bootstrap
+              mountPath: /etc/caddy/Caddyfile
+              subPath: Caddyfile
+              readOnly: true
+            - name: caddy-generated
+              mountPath: /etc/caddy/generated
+              readOnly: true
+            - name: caddy-certificates
+              mountPath: /etc/dns-operator/certs
+              readOnly: true
+      volumes:
+        - name: caddy-bootstrap
+          configMap:
+            name: dns-operator-caddy-bootstrap
+        - name: caddy-generated
+          configMap:
+            name: caddy-runtime
+            optional: true
+        - name: caddy-certificates
+          secret:
+            secretName: caddy-runtime-certificates
+            optional: true
