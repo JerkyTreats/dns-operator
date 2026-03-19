@@ -2,7 +2,7 @@
 
 ## Executive Summary
 
-The Logging domain (`reference/internal/logging/`) provides centralized logging using uber-go/zap. It implements a singleton pattern with configurable log levels, structured logging, and thread-safe access. All application code must use this package for logging.
+The Logging domain from the legacy reference repo under `internal/logging/` provides centralized logging using uber-go/zap. It implements a singleton pattern with configurable log levels, structured logging, and thread-safe access. All application code must use this package for logging.
 
 ## Architecture Overview
 
@@ -260,5 +260,4 @@ The Logging domain provides centralized structured logging with zap. Migration t
 5. **Structured Fields** - Use structured fields for context information
 
 The domain's singleton pattern and structured logging approach should be maintained, with additions for Kubernetes context and JSON encoding for production environments.
-
 

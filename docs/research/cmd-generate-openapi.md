@@ -2,7 +2,7 @@
 
 ## Executive Summary
 
-The OpenAPI Generation command (`reference/cmd/generate-openapi/`) provides build-time OpenAPI specification generation by analyzing Go code using AST (Abstract Syntax Tree) analysis. It discovers routes registered via `RouteInfo` structs and generates complete OpenAPI 3.0 specifications automatically.
+The OpenAPI Generation command from the legacy reference repo under `cmd/generate-openapi/` provides build-time OpenAPI specification generation by analyzing Go code using AST based analysis. It discovers routes registered via `RouteInfo` structs and generates complete OpenAPI 3.0 specifications automatically.
 
 ## Architecture Overview
 
@@ -324,5 +324,4 @@ The OpenAPI Generation command provides build-time OpenAPI specification generat
 5. **Documentation** - Generate CRD and webhook documentation
 
 The domain's AST analysis and type introspection logic should be preserved and adapted for CRD and webhook schema generation, while leveraging kubebuilder for standard CRD schema generation.
-
 

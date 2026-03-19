@@ -17,7 +17,7 @@ func TestImportBuildsExpectedResources(t *testing.T) {
 	result, err := Import(ImportInput{
 		Namespace:         "dns-operator-system",
 		BundleName:        "internal-shared",
-		NameserverAddress: "100.70.110.111",
+		NameserverAddress: "192.0.2.53",
 		ConfigYAML: []byte(`
 tailscale:
   api_key: tskey-api-123
@@ -136,7 +136,7 @@ app.internal.example.test {
 	if len(bundle.Spec.AdditionalDomains) != 3 {
 		t.Fatalf("expected deduped additional domains including base domain, got %#v", bundle.Spec.AdditionalDomains)
 	}
-	if tailnetConfig == nil || tailnetConfig.Spec.Nameserver.Address != "100.70.110.111" {
+	if tailnetConfig == nil || tailnetConfig.Spec.Nameserver.Address != "192.0.2.53" {
 		t.Fatalf("expected imported tailnet dns config, got %#v", tailnetConfig)
 	}
 }

@@ -81,7 +81,7 @@ go run ./cmd/import-reference \
   --proxy-rules /path/to/export/proxy_rules.json \
   --certificate-domains /path/to/export/certificate_domains.json \
   --caddyfile /path/to/export/Caddyfile \
-  --nameserver-address 100.70.110.111 \
+  --nameserver-address 192.0.2.53 \
   --output dist/imported-resources.yaml \
   --report dist/import-report.json
 ```
@@ -180,4 +180,3 @@ distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
-

@@ -2,7 +2,7 @@
 
 ## Executive Summary
 
-The Validation domain (`reference/pkg/validation/`) provides validation utilities for DNS names, FQDNs, and domain names. It implements RFC-compliant validation with character checking and format validation. The package is in the `pkg/` directory, making it a public API that can be used by external consumers.
+The Validation domain from the legacy reference repo under `pkg/validation/` provides validation utilities for DNS names, FQDNs, and domain names. It implements RFC-compliant validation with character checking and format validation. The package is in the `pkg/` directory, making it a public API that can be used by external consumers.
 
 ## Architecture Overview
 
@@ -257,4 +257,3 @@ The Validation domain provides DNS and domain name validation utilities. Migrati
 5. **Error Formatting** - Format errors for Kubernetes API
 
 The domain's validation logic should be preserved and reused in webhooks and controllers, with OpenAPI schema providing basic format validation at the Kubernetes API level.
-

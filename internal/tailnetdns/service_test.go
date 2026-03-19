@@ -34,11 +34,11 @@ func TestEnsureSplitDNSNoDrift(t *testing.T) {
 
 	client := &fakeSplitDNSClient{
 		getResult: map[string][]string{
-			"internal.example.test": {"100.70.110.111"},
+			"internal.example.test": {"192.0.2.53"},
 		},
 	}
 
-	result, err := EnsureSplitDNS(context.Background(), client, "internal.example.test", "100.70.110.111")
+	result, err := EnsureSplitDNS(context.Background(), client, "internal.example.test", "192.0.2.53")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -61,11 +61,11 @@ func TestEnsureSplitDNSRepairsDrift(t *testing.T) {
 			"internal.example.test": {"100.70.110.112"},
 		},
 		patchResult: map[string][]string{
-			"internal.example.test": {"100.70.110.111"},
+			"internal.example.test": {"192.0.2.53"},
 		},
 	}
 
-	result, err := EnsureSplitDNS(context.Background(), client, "internal.example.test", "100.70.110.111")
+	result, err := EnsureSplitDNS(context.Background(), client, "internal.example.test", "192.0.2.53")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -75,7 +75,7 @@ func TestEnsureSplitDNSRepairsDrift(t *testing.T) {
 	if result.DriftDetected {
 		t.Fatal("expected drift to be cleared after repair")
 	}
-	if result.ConfiguredNameserver != "100.70.110.111" {
+	if result.ConfiguredNameserver != "192.0.2.53" {
 		t.Fatalf("unexpected configured nameserver: %s", result.ConfiguredNameserver)
 	}
 }
@@ -90,7 +90,7 @@ func TestEnsureSplitDNSPatchFailure(t *testing.T) {
 		patchErr: errors.New("boom"),
 	}
 
-	_, err := EnsureSplitDNS(context.Background(), client, "internal.example.test", "100.70.110.111")
+	_, err := EnsureSplitDNS(context.Background(), client, "internal.example.test", "192.0.2.53")
 	if err == nil {
 		t.Fatal("expected error")
 	}

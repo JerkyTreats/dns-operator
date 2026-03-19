@@ -47,7 +47,7 @@ func TestTailnetDNSConfigReconcileSuccess(t *testing.T) {
 			Zone:    "internal.example.test",
 			Tailnet: "example.ts.net",
 			Nameserver: tailscalev1alpha1.TailnetNameserver{
-				Address: "100.70.110.111",
+				Address: "192.0.2.53",
 			},
 			Auth: tailscalev1alpha1.TailnetDNSAuth{
 				SecretRef: common.SecretKeyReference{Name: "tailscale-admin", Key: "api-key"},
@@ -77,7 +77,7 @@ func TestTailnetDNSConfigReconcileSuccess(t *testing.T) {
 			}
 			return fakeSplitDNSClient{
 				getResult: map[string][]string{
-					"internal.example.test": {"100.70.110.111"},
+					"internal.example.test": {"192.0.2.53"},
 				},
 			}
 		},
@@ -94,7 +94,7 @@ func TestTailnetDNSConfigReconcileSuccess(t *testing.T) {
 		t.Fatalf("get updated object: %v", err)
 	}
 
-	if updated.Status.ConfiguredNameserver != "100.70.110.111" {
+	if updated.Status.ConfiguredNameserver != "192.0.2.53" {
 		t.Fatalf("unexpected configured nameserver: %s", updated.Status.ConfiguredNameserver)
 	}
 	if updated.Status.DriftDetected {
@@ -111,7 +111,7 @@ func TestTailnetDNSConfigReconcileMissingSecret(t *testing.T) {
 		Spec: tailscalev1alpha1.TailnetDNSConfigSpec{
 			Zone:       "internal.example.test",
 			Tailnet:    "example.ts.net",
-			Nameserver: tailscalev1alpha1.TailnetNameserver{Address: "100.70.110.111"},
+			Nameserver: tailscalev1alpha1.TailnetNameserver{Address: "192.0.2.53"},
 			Auth:       tailscalev1alpha1.TailnetDNSAuth{SecretRef: common.SecretKeyReference{Name: "missing", Key: "api-key"}},
 			Behavior:   tailscalev1alpha1.TailnetBehavior{Mode: tailscalev1alpha1.TailnetDNSBehaviorBootstrapAndRepair},
 		},
@@ -148,7 +148,7 @@ func TestTailnetDNSConfigReconcileApplyFailure(t *testing.T) {
 		Spec: tailscalev1alpha1.TailnetDNSConfigSpec{
 			Zone:       "internal.example.test",
 			Tailnet:    "example.ts.net",
-			Nameserver: tailscalev1alpha1.TailnetNameserver{Address: "100.70.110.111"},
+			Nameserver: tailscalev1alpha1.TailnetNameserver{Address: "192.0.2.53"},
 			Auth:       tailscalev1alpha1.TailnetDNSAuth{SecretRef: common.SecretKeyReference{Name: "tailscale-admin", Key: "api-key"}},
 			Behavior:   tailscalev1alpha1.TailnetBehavior{Mode: tailscalev1alpha1.TailnetDNSBehaviorBootstrapAndRepair},
 		},
@@ -201,7 +201,7 @@ func TestTailnetDNSConfigReconcileRejectsCrossNamespaceSecretRef(t *testing.T) {
 		Spec: tailscalev1alpha1.TailnetDNSConfigSpec{
 			Zone:       "internal.example.test",
 			Tailnet:    "example.ts.net",
-			Nameserver: tailscalev1alpha1.TailnetNameserver{Address: "100.70.110.111"},
+			Nameserver: tailscalev1alpha1.TailnetNameserver{Address: "192.0.2.53"},
 			Auth: tailscalev1alpha1.TailnetDNSAuth{
 				SecretRef: common.SecretKeyReference{Name: "tailscale-admin", Namespace: "shared-secrets", Key: "api-key"},
 			},

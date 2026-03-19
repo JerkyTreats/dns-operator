@@ -2,7 +2,7 @@
 
 ## Executive Summary
 
-The Persistence domain (`reference/internal/persistence/`) provides file-based storage with atomic operations, backup management, and recovery capabilities. It implements thread-safe file operations with automatic backup creation and recovery from corruption.
+The Persistence domain from the legacy reference repo under `internal/persistence/` provides file-based storage with atomic operations, backup management, and recovery capabilities. It implements thread-safe file operations with automatic backup creation and recovery from corruption.
 
 ## Architecture Overview
 
@@ -308,5 +308,4 @@ The Persistence domain provides file-based storage with atomic operations and ba
 6. **Remove Thread Safety** - Kubernetes API handles concurrency
 
 The domain's file storage functionality is completely replaced by Kubernetes-native CRD storage in etcd, providing automatic persistence, versioning, and concurrency control without application-level management.
-
 

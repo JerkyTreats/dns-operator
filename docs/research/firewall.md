@@ -2,7 +2,7 @@
 
 ## Executive Summary
 
-The Firewall domain (`reference/internal/firewall/`) manages Linux firewall rules using ipset and iptables to allow Tailscale CIDR ranges (100.64.0.0/10) access to DNS and API services. It provides automatic firewall rule management with validation and cleanup capabilities.
+The Firewall domain from the legacy reference repo under `internal/firewall/` manages Linux firewall rules using ipset and iptables to allow Tailscale CIDR ranges such as `100.64.0.0/10` access to DNS and API services. It provides automatic firewall rule management with validation and cleanup capabilities.
 
 THIS FEATURE WILL NOT BE MIGRATED 
 
@@ -283,5 +283,4 @@ The Firewall domain manages Linux firewall rules using ipset and iptables. Migra
 5. **Native Validation** - Use NetworkPolicy status for validation
 
 The domain's firewall management logic should be replaced with NetworkPolicy resources, providing Kubernetes-native network security without requiring privileged access.
-
 

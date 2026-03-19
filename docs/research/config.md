@@ -2,7 +2,7 @@
 
 ## Executive Summary
 
-The Configuration domain (`reference/internal/config/`) provides centralized configuration management using spf13/viper. It supports YAML configuration files, environment variable overrides, required key validation, and hot-reload capabilities. The domain follows a singleton pattern with thread-safe access.
+The Configuration domain from the legacy reference repo under `internal/config/` provides centralized configuration management using spf13/viper. It supports YAML configuration files, environment variable overrides, required key validation, and hot-reload capabilities. The domain follows a singleton pattern with thread-safe access.
 
 ## Architecture Overview
 
@@ -305,5 +305,4 @@ The Configuration domain provides centralized configuration management with Vipe
 6. **Validation** - Move validation to CRD schema and webhooks
 
 The singleton pattern and required key validation can be adapted for operator-level configuration management, while resource-specific configuration moves to CRD specs.
-
 

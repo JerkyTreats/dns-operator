@@ -42,7 +42,7 @@ go run ./cmd/import-reference \
   --proxy-rules /path/to/export/proxy_rules.json \
   --certificate-domains /path/to/export/certificate_domains.json \
   --caddyfile /path/to/export/Caddyfile \
-  --nameserver-address 100.70.110.111 \
+  --nameserver-address 192.0.2.53 \
   --output dist/imported-resources.yaml \
   --report dist/import-report.json
 ```

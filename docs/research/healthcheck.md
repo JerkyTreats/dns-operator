@@ -2,7 +2,7 @@
 
 ## Executive Summary
 
-The Healthcheck domain (`reference/internal/healthcheck/`) provides health checking capabilities for DNS services and other components. It implements a flexible checker interface with aggregation support, allowing multiple health checks to be combined for overall system health assessment.
+The Healthcheck domain from the legacy reference repo under `internal/healthcheck/` provides health checking capabilities for DNS services and other components. It implements a flexible checker interface with aggregation support, allowing multiple health checks to be combined for overall system health assessment.
 
 ## Architecture Overview
 
@@ -313,5 +313,4 @@ The Healthcheck domain provides health checking capabilities for system componen
 5. **Status Reporting** - Component health in CRD status
 
 The domain's checker interface and aggregation logic can be adapted for controller-based health checking, while leveraging Kubernetes-native probe mechanisms for pod health management.
-
 

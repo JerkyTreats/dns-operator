@@ -85,7 +85,7 @@ Each phase should produce four things:
 
 ## Observed Reference Reality
 
-The current reference system is not just source code in `reference/`. It also has a live runtime data shape captured in a local export plus external Tailscale admin state that are intentionally kept outside the repository.
+The current reference system is not just source code from the legacy reference repository. It also has a live runtime data shape captured in a local export plus external Tailscale admin state that are intentionally kept outside the repository.
 
 - A managed internal zone
 - persisted proxy rule state
@@ -116,7 +116,7 @@ The roadmap is complete when:
 
 - Research summaries in `docs/research/`
 - Domain migration guides in `docs/migration/`
-- Runtime behavior in `reference/`
+- Runtime behavior from the legacy reference repository
 - Exported runtime state in `docs/plan/current-reference-state.md`
 - Source to target migration mapping in `docs/plan/current-reference-migration-matrix.md`
 - Argo install model in `docs/plan/deployment-shape.md`
