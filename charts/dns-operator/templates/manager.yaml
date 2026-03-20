@@ -10,6 +10,7 @@ spec:
   replicas: {{ .Values.operator.replicaCount }}
   strategy:
     type: Recreate
+    rollingUpdate: null
   selector:
     matchLabels:
       {{- include "dns-operator.selectorLabels" . | nindent 6 }}
