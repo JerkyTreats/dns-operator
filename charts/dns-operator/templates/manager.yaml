@@ -8,6 +8,8 @@ metadata:
     control-plane: controller-manager
 spec:
   replicas: {{ .Values.operator.replicaCount }}
+  strategy:
+    type: Recreate
   selector:
     matchLabels:
       {{- include "dns-operator.selectorLabels" . | nindent 6 }}

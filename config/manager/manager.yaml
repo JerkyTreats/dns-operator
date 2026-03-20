@@ -17,6 +17,8 @@ metadata:
     app.kubernetes.io/name: dns-operator
     app.kubernetes.io/managed-by: kustomize
 spec:
+  strategy:
+    type: Recreate
   selector:
     matchLabels:
       control-plane: controller-manager
