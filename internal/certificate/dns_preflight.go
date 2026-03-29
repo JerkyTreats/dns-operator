@@ -86,7 +86,7 @@ func preflightDNSChallenges(ctx context.Context, token string, domains []string,
 		if err != nil {
 			return err
 		}
-		fqdn := "_acme-challenge." + domain
+		fqdn := preflightFQDN(domain)
 		recordID, err := client.createTXTRecord(ctx, zoneID, fqdn, value)
 		if err != nil {
 			return fmt.Errorf("create preflight txt record for %s: %w", domain, err)
@@ -291,6 +291,10 @@ func randomPreflightValue() (string, error) {
 		return "", fmt.Errorf("generate preflight token: %w", err)
 	}
 	return "dns-operator-preflight-" + hex.EncodeToString(buf), nil
+}
+
+func preflightFQDN(domain string) string {
+	return "_dns-operator-preflight." + domain
 }
 
 func containsString(values []string, target string) bool {
