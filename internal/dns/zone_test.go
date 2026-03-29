@@ -1,6 +1,8 @@
 package dns
 
 import (
+	"regexp"
+	"strconv"
 	"strings"
 	"testing"
 
@@ -77,6 +79,21 @@ func TestRenderZoneDeterministicAndNested(t *testing.T) {
 
 	if zone.Hash == "" {
 		t.Fatal("expected non-empty zone hash")
+	}
+
+	serialPattern := regexp.MustCompile(`(?m)^\s+([0-9]+) ; serial$`)
+	match := serialPattern.FindStringSubmatch(zone.Content)
+	if match == nil {
+		t.Fatalf("expected SOA serial in zone content:\n%s", zone.Content)
+	}
+
+	serial, err := strconv.ParseUint(match[1], 10, 32)
+	if err != nil {
+		t.Fatalf("expected uint32 serial, got %q: %v", match[1], err)
+	}
+
+	if serial < 2026000000 || serial > 2026009999 {
+		t.Fatalf("expected bounded serial, got %d", serial)
 	}
 }
 

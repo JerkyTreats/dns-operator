@@ -258,11 +258,12 @@ func zoneSerial(keys []string, aggregated map[string]AuthoritativeRecord) string
 
 	sum := sha1.Sum([]byte(builder.String()))
 	serial := uint64(2026000000)
+	var suffix uint64
 	for i := 0; i < 4; i++ {
-		serial = serial*10 + uint64(sum[i]%10)
+		suffix = suffix*10 + uint64(sum[i]%10)
 	}
 
-	return fmt.Sprintf("%d", serial)
+	return fmt.Sprintf("%d", serial+suffix)
 }
 
 func sha1Hex(input string) string {
