@@ -3,9 +3,11 @@ package certificate
 import (
 	"context"
 	"fmt"
+	"reflect"
 	"testing"
 	"time"
 
+	"github.com/go-acme/lego/v4/challenge/dns01"
 	"github.com/go-acme/lego/v4/lego"
 	certificatev1alpha1 "github.com/jerkytreats/dns-operator/api/certificate/v1alpha1"
 	corev1 "k8s.io/api/core/v1"
@@ -106,6 +108,24 @@ func TestEnsureCertificateReturnsPreflightFailureWithoutIssuance(t *testing.T) {
 	})
 	if FailureClassFromError(err) != FailureClassDNSPreflight {
 		t.Fatalf("expected dns preflight failure, got %v", err)
+	}
+}
+
+func TestDNS01ChallengeOptionsKeepAuthoritativePropagationCheck(t *testing.T) {
+	t.Parallel()
+
+	challenge := dns01.NewChallenge(nil, nil, nil, dns01ChallengeOptions()...)
+	value := reflect.ValueOf(challenge).Elem()
+	preCheck := value.FieldByName("preCheck")
+
+	requireAuthoritative := preCheck.FieldByName("requireAuthoritativeNssPropagation").Bool()
+	if !requireAuthoritative {
+		t.Fatal("expected authoritative propagation checks to remain enabled")
+	}
+
+	requireRecursive := preCheck.FieldByName("requireRecursiveNssPropagation").Bool()
+	if requireRecursive {
+		t.Fatal("expected recursive propagation checks to remain disabled by default")
 	}
 }
 

@@ -235,16 +235,19 @@ func newLegoClient(user *acmeUser, providerName, cloudflareToken string) (*lego.
 		return nil, fmt.Errorf("create lego client: %w", err)
 	}
 
-	options := []dns01.ChallengeOption{
-		dns01.AddRecursiveNameservers(defaultRecursiveResolvers),
-		dns01.AddDNSTimeout(defaultChallengeTimeout),
-		dns01.DisableAuthoritativeNssPropagationRequirement(),
-	}
+	options := dns01ChallengeOptions()
 	if err := client.Challenge.SetDNS01Provider(dnsProvider, options...); err != nil {
 		return nil, fmt.Errorf("configure dns01 provider: %w", err)
 	}
 
 	return client, nil
+}
+
+func dns01ChallengeOptions() []dns01.ChallengeOption {
+	return []dns01.ChallengeOption{
+		dns01.AddRecursiveNameservers(defaultRecursiveResolvers),
+		dns01.AddDNSTimeout(defaultChallengeTimeout),
+	}
 }
 
 func loadOrCreateACMEUser(namespace, name, email string, existing *corev1.Secret) (*acmeUser, *corev1.Secret, error) {
