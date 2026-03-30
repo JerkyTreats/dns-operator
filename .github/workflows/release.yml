@@ -27,7 +27,7 @@ jobs:
   verify:
     name: Verify
     if: ${{ github.event_name != 'push' || !contains(github.event.head_commit.message, '[skip ci]') }}
-    runs-on: ubuntu-latest
+    runs-on: blacksmith-4vcpu-ubuntu-2404
     permissions:
       contents: read
     steps:
@@ -51,7 +51,7 @@ jobs:
   release:
     name: Release and publish
     if: ${{ github.event_name != 'push' || !contains(github.event.head_commit.message, '[skip ci]') }}
-    runs-on: ubuntu-latest
+    runs-on: blacksmith-4vcpu-ubuntu-2404
     needs: verify
     concurrency:
       group: release-${{ github.event.repository.default_branch }}
@@ -258,9 +258,9 @@ jobs:
           git tag "${release_tag}" "${RELEASE_SHA}"
           git push origin "${release_tag}"
 
-      - name: Set up Docker Buildx
         if: ${{ steps.plan.outputs.release_required == 'true' }}
-        uses: docker/setup-buildx-action@v3
+      - name: Setup Blacksmith Builder
+        uses: useblacksmith/setup-docker-builder@v1
 
       - name: Log in to GHCR
         if: ${{ steps.plan.outputs.release_required == 'true' }}
@@ -288,15 +288,13 @@ jobs:
 
       - name: Build and push image
         if: ${{ steps.plan.outputs.release_required == 'true' }}
-        uses: docker/build-push-action@v6
+        uses: useblacksmith/build-push-action@v2
         with:
           context: .
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           platforms: linux/amd64,linux/arm64
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
 
       - name: Build installer bundle
         if: ${{ steps.plan.outputs.release_required == 'true' }}
